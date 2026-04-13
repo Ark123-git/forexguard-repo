@@ -85,10 +85,6 @@ if __name__ == "__main__":
 
     elapsed = time.time() - t0
     print(f"\n{'═'*60}")
-<<<<<<< HEAD
     print(f"   Pipeline complete in {elapsed:.1f}s")
-=======
-    print(f"  ✅ Pipeline complete in {elapsed:.1f}s")
->>>>>>> 1de7f2e45308a5d7ca20b46b9a7d37a9f65f2356
     print(f"  Alerts generated: {len(alerts)}")
     print(f"{'═'*60}")
