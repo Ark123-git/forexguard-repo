@@ -23,27 +23,16 @@ try:
     from torch.utils.data import DataLoader, TensorDataset
     TORCH_AVAILABLE = True
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-<<<<<<< HEAD
 except (ImportError, TypeError):
     TORCH_AVAILABLE = False
     DEVICE = "cpu"
 
 # Must be defined before any class — pickle resolves this at module load time
-=======
-except ImportError:
-    TORCH_AVAILABLE = False
-    DEVICE = "cpu"
-
->>>>>>> 1de7f2e45308a5d7ca20b46b9a7d37a9f65f2356
 MODEL_DIR = "models/advanced/saved"
 
 
 # ════════════════════════════════════════════════════════════════
-<<<<<<< HEAD
 # PyTorch LSTM Autoencoder (only when torch is available)
-=======
-# PyTorch LSTM Autoencoder
->>>>>>> 1de7f2e45308a5d7ca20b46b9a7d37a9f65f2356
 # ════════════════════════════════════════════════════════════════
 
 if TORCH_AVAILABLE:
@@ -69,7 +58,6 @@ if TORCH_AVAILABLE:
         def feat_recon_error(self, x):
             return ((x - self(x))**2).mean(dim=1)
 
-<<<<<<< HEAD
 else:
     # Pickle compatibility stub — when a .pkl saved with PyTorch backend is
     # loaded in an environment without PyTorch (e.g. Docker without torch),
@@ -80,8 +68,6 @@ else:
         def __init__(self, *args, **kwargs):
             pass
 
-=======
->>>>>>> 1de7f2e45308a5d7ca20b46b9a7d37a9f65f2356
 
 # ════════════════════════════════════════════════════════════════
 # sklearn MLP Autoencoder fallback
@@ -90,11 +76,7 @@ else:
 class _MLPAutoencoder:
     """
     Uses sklearn's MLPRegressor as a stable deep autoencoder.
-<<<<<<< HEAD
     Architecture: input -> hidden -> latent -> hidden -> input
-=======
-    Architecture: input → 128 → 64 → 32 → 64 → 128 → input
->>>>>>> 1de7f2e45308a5d7ca20b46b9a7d37a9f65f2356
     """
     def __init__(self, input_dim, epochs=80, lr=1e-3):
         latent = max(8, input_dim // 4)
@@ -114,11 +96,7 @@ class _MLPAutoencoder:
         self.input_dim = input_dim
 
     def fit(self, X: np.ndarray):
-<<<<<<< HEAD
         self.model.fit(X, X)
-=======
-        self.model.fit(X, X)           # reconstruct input → input
->>>>>>> 1de7f2e45308a5d7ca20b46b9a7d37a9f65f2356
         return self
 
     def reconstruct(self, X: np.ndarray) -> np.ndarray:
@@ -184,7 +162,6 @@ class LSTMAEDetector:
             Xt_all = torch.tensor(X_all, dtype=torch.float32).unsqueeze(1).to(DEVICE)
             errs   = self.model.recon_error(Xt_all).cpu().numpy()
         else:
-<<<<<<< HEAD
             self.model = _MLPAutoencoder(dim, epochs=self.epochs, lr=self.lr)
             self.model.fit(X_train)
             print(f"  MLP training done. Iterations: {self.model.model.n_iter_}")
@@ -208,22 +185,6 @@ class LSTMAEDetector:
         X  = np.nan_to_num(X,  nan=0.0, posinf=0.0, neginf=0.0)
         Xs = self.scaler.transform(X)
         Xs = np.nan_to_num(Xs, nan=0.0, posinf=0.0, neginf=0.0)
-=======
-            # sklearn MLP path
-            self.model = _MLPAutoencoder(dim, epochs=self.epochs, lr=self.lr)
-            self.model.fit(X_train)
-            print(f"  MLP training done. "
-                  f"Iterations: {self.model.model.n_iter_}")
-            errs = self.model.recon_error(X_all)
-
-        normal_errs    = errs[labels == 0] if labels is not None else errs
-        self.threshold = float(np.percentile(normal_errs, 95))
-        print(f"[AE] Threshold (95th pct): {self.threshold:.6f}")
-        return self
-
-    def predict(self, X: np.ndarray) -> pd.DataFrame:
-        Xs = self.scaler.transform(X)
->>>>>>> 1de7f2e45308a5d7ca20b46b9a7d37a9f65f2356
 
         if self.backend == "torch":
             Xt        = torch.tensor(Xs, dtype=torch.float32).unsqueeze(1).to(DEVICE)
@@ -233,15 +194,9 @@ class LSTMAEDetector:
             recon_err = self.model.recon_error(Xs)
             feat_err  = self.model.feat_recon_error(Xs)
 
-<<<<<<< HEAD
         # Threshold-anchored normalization — stable for any batch size
         score = np.clip(recon_err / (self.score_scale_ + 1e-9), 0.0, 1.0)
         pred  = (recon_err > self.threshold).astype(int)
-=======
-        lo, hi = recon_err.min(), recon_err.max()
-        score  = (recon_err - lo) / (hi - lo + 1e-9)
-        pred   = (recon_err > self.threshold).astype(int)
->>>>>>> 1de7f2e45308a5d7ca20b46b9a7d37a9f65f2356
 
         top_feats = [
             json.dumps([self.feat_cols[i] for i in np.argsort(row)[::-1][:5]])
@@ -259,7 +214,6 @@ class LSTMAEDetector:
         if self.backend == "torch":
             torch.save(self.model.state_dict(), os.path.join(path, "ae_weights.pt"))
             mdl, self.model = self.model, None
-<<<<<<< HEAD
             with open(os.path.join(path, "ae.pkl"), "wb") as f:
                 pickle.dump(self, f)
             self.model = mdl
@@ -267,20 +221,12 @@ class LSTMAEDetector:
             with open(os.path.join(path, "ae.pkl"), "wb") as f:
                 pickle.dump(self, f)
         print(f"[AE] Saved -> {path}/")
-=======
-            with open(os.path.join(path, "ae.pkl"), "wb") as f: pickle.dump(self, f)
-            self.model = mdl
-        else:
-            with open(os.path.join(path, "ae.pkl"), "wb") as f: pickle.dump(self, f)
-        print(f"[AE] Saved → {path}/")
->>>>>>> 1de7f2e45308a5d7ca20b46b9a7d37a9f65f2356
 
     @classmethod
     def load(cls, path: str = MODEL_DIR):
         with open(os.path.join(path, "ae.pkl"), "rb") as f:
             obj = pickle.load(f)
         if obj.backend == "torch":
-<<<<<<< HEAD
             if not TORCH_AVAILABLE:
                 # PyTorch not in this environment — retrain with sklearn backend
                 print("[AE] PyTorch unavailable. Retraining with sklearn backend...")
@@ -296,18 +242,12 @@ class LSTMAEDetector:
                 obj.model.fit(X_train)
                 print("[AE] sklearn retrain complete.")
                 return obj
-=======
->>>>>>> 1de7f2e45308a5d7ca20b46b9a7d37a9f65f2356
             obj.model = _LSTMAutoencoder(
                 len(obj.feat_cols), obj.hidden_dim, obj.n_layers, obj.dropout
             ).to(DEVICE)
             obj.model.load_state_dict(
-<<<<<<< HEAD
                 torch.load(os.path.join(path, "ae_weights.pt"), map_location=DEVICE)
             )
-=======
-                torch.load(os.path.join(path, "ae_weights.pt"), map_location=DEVICE))
->>>>>>> 1de7f2e45308a5d7ca20b46b9a7d37a9f65f2356
             obj.model.eval()
         return obj
 
@@ -319,11 +259,7 @@ def evaluate(scores_df, labels):
                                   precision_score, recall_score, f1_score)
     y, pred, sc = labels.astype(int), scores_df["lstm_anomaly"], scores_df["lstm_score"]
     bk = "PyTorch-LSTM" if TORCH_AVAILABLE else "sklearn-MLP"
-<<<<<<< HEAD
     print(f"\n-- Autoencoder ({bk}) Results ------------------------------------")
-=======
-    print(f"\n── Autoencoder ({bk}) Results ────────────────────────────")
->>>>>>> 1de7f2e45308a5d7ca20b46b9a7d37a9f65f2356
     print(f"  AUC={roc_auc_score(y,sc):.3f}  "
           f"AP={average_precision_score(y,sc):.3f}  "
           f"P={precision_score(y,pred,zero_division=0):.3f}  "
@@ -350,17 +286,9 @@ def train_lstm(feature_store_path="data/raw/feature_store.csv", save=True):
     if save:
         det.save()
         results.to_csv("data/raw/lstm_scores.csv", index=False)
-<<<<<<< HEAD
         print("[AE] Scores -> data/raw/lstm_scores.csv")
-=======
-        print("[AE] Scores → data/raw/lstm_scores.csv")
->>>>>>> 1de7f2e45308a5d7ca20b46b9a7d37a9f65f2356
     return det, results
 
 
 if __name__ == "__main__":
-<<<<<<< HEAD
     train_lstm()
-=======
-    train_lstm()
->>>>>>> 1de7f2e45308a5d7ca20b46b9a7d37a9f65f2356
