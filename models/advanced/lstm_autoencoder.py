@@ -240,7 +240,7 @@ class LSTMAEDetector:
                 labels = store["is_anomalous"].astype(int).to_numpy()
                 X_train = obj.scaler.transform(X[labels == 0])
                 obj.model.fit(X_train)
-                print("[AE] sklearn retrain complete.")
+                print("[AE] sklearn retrain completed.")
                 return obj
             obj.model = _LSTMAutoencoder(
                 len(obj.feat_cols), obj.hidden_dim, obj.n_layers, obj.dropout
